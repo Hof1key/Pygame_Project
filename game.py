@@ -99,7 +99,7 @@ class Cloud(pygame.sprite.Sprite):
         self.size = self.image.get_size()
 
         self.x, self.y = self.size
-        x = random.randrange(0, w - self.x)
+        x = random.randrange(0, w)
         y = random.randint(0, h - self.y)
 
         self.rect = pygame.Rect((x, y), self.size)
@@ -107,8 +107,9 @@ class Cloud(pygame.sprite.Sprite):
     def update(self, *args):
 
         self.rect.left += 1
-        if self.rect.left > w - self.x // 2:
-            self.rect.left = - self.x // 2
+
+        if self.rect.left > w:
+            self.rect.left = - self.x
 
 
 class Platform_menu(Platform):
@@ -163,7 +164,7 @@ while running:
     Platform_menu((w // 2 - 60, 3 * h // 4))
 
     k_clouds = 0
-    while k_clouds < 20:
+    while k_clouds < 25:
         cl_i = Cloud(random.choice(clouds_imgs))
         while len(pygame.sprite.spritecollide(cl_i, clouds, False)) != 0:
             cl_i = Cloud(random.choice(clouds_imgs))
@@ -210,7 +211,7 @@ while running:
     hero = Doodle(w // 2 - 20, 3 * h // 4 - 30)
 
     k_clouds = 0
-    while k_clouds < 20:
+    while k_clouds < 25:
         cl_i = Cloud(random.choice(clouds_imgs))
         while len(pygame.sprite.spritecollide(cl_i, clouds, False)) != 0:
             cl_i = Cloud(random.choice(clouds_imgs))
