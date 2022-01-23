@@ -48,7 +48,7 @@ class Doodle(pygame.sprite.Sprite):
         self.bool_up = False
 
     def update(self, *args):
-        global counter, game, running
+        global counter, game, running, results
         if self.bool_up:
             self.rect.top -= 2
             if self.rect.top + 90 <= self.y_jump:
@@ -58,16 +58,29 @@ class Doodle(pygame.sprite.Sprite):
                 self.rect.top += 3
             else:
                 self.rect.top += 3
+
                 self.bool_up = True
                 counter += 1
+                if counter % 5 == 0:
+                    platform_array.append(2)
+
+                if counter % 10 == 0:
+                    platform_array.append(1)
+
                 self.y_jump = self.rect.top
         if self.rect.left < 0:
-            self.rect.left += w
+            self.rect.left = w
         if self.rect.left > w:
-            self.rect.left -= w
+            self.rect.left = 0
 
         if self.rect.top > h or self.rect.top < -Doodle.size[1] * 0.75:
             game = False
+            results.append(counter)
+            results = sorted(results, reverse=True)
+            with open('data/res.txt', 'w') as res:
+                for i in range(len(results) - 1):
+                    res.write(str(results[i]) + '\n')
+                res.write(str(results[len(results) - 1]))
 
 
 class Platform(pygame.sprite.Sprite):
@@ -90,6 +103,35 @@ class Platform(pygame.sprite.Sprite):
             self.kill()
 
 
+class Platform_Move(pygame.sprite.Sprite):
+    def __init__(self, pos, x=100):
+
+        super().__init__(all_sprites)
+        self.add(platforms)
+
+        size = x, 10
+        self.image = load_image('platf1.png', -1)
+        self.rect = pygame.Rect(pos, size)
+        self.border = pos[0] - 60
+        self.left = True
+
+    def update(self, *args):
+        self.rect.top += 1
+        if self.left:
+            self.rect.left -= 1
+            if self.rect.left == self.border:
+                self.border += 120
+                self.left = False
+        else:
+            self.rect.left += 1
+            if self.rect.left == self.border:
+                self.border -= 120
+                self.left = True
+
+        if self.rect.top >= h:
+            self.kill()
+
+
 class Cloud(pygame.sprite.Sprite):
 
     def __init__(self, im):
@@ -107,7 +149,6 @@ class Cloud(pygame.sprite.Sprite):
     def update(self, *args):
 
         self.rect.left += 1
-
         if self.rect.left > w:
             self.rect.left = - self.x
 
@@ -148,6 +189,16 @@ k_right = False
 
 count_pl = 0
 counter = 0
+results = []
+platform_array = [1 for _ in range(18)] + [2] + [3]
+
+with open('data/res.txt', 'r') as res:
+    m = list(map(int, res.read().split('\n')))
+    results = sorted(m, reverse=True)
+
+
+font = pygame.font.SysFont('Arial', 25)
+font1 = pygame.font.SysFont('Colibri', 50)
 
 while running:
 
@@ -193,6 +244,29 @@ while running:
 
         screen.blit(menu_img, (0, 0))
         screen.blit(start_btn, (w // 2 - 20, h // 2 - 20))
+
+        txt1 = font.render('Score', False, (0, 0, 0))
+        txt0 = font.render('№', False, (0, 0, 0))
+
+        pos1 = font1.render('1', False, pygame.Color('gold'))
+        pos2 = font1.render('2', False, pygame.Color('cornsilk2'))
+        pos3 = font1.render('3', False, pygame.Color('darkorange'))
+
+        score1 = font1.render(str(results[0]), False, pygame.Color('gold'))
+        score2 = font1.render(str(results[1]), False, pygame.Color('cornsilk2'))
+        score3 = font1.render(str(results[2]), False, pygame.Color('darkorange'))
+
+        screen.blit(txt1, (315, 12)) # текст топ-результатов
+        screen.blit(txt0, (225, 12))
+
+        screen.blit(pos1, (225, 65))
+        screen.blit(pos2, (225, 120))
+        screen.blit(pos3, (225, 175))
+
+        screen.blit(score1, (315, 65))
+        screen.blit(score2, (315, 120))
+        screen.blit(score3, (315, 175))
+
 
         clouds.update()
         all_sprites.update()
@@ -263,7 +337,11 @@ while running:
         count_pl += 1
 
         if count_pl == 60:
-            Platform((random.randrange(0, w - 100), 0))
+            i_pl = random.choice(platform_array)
+            if i_pl == 1:
+                Platform((random.randrange(0, w - 100), 0))
+            else:
+                Platform_Move((random.randrange(0, w - 100), 0))
             count_pl = 0
 
         screen.fill(color)
